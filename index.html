@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CD 70 Fuel</title>
+<style>
+:root{
+  --bg:#14171A; --surface:#1E2226; --surface-2:#262B30; --border:#33393F;
+  --text:#EDEAE3; --text-muted:#9AA0A6; --accent:#E8A33D; --good:#4CAF6D; --bad:#E1584A;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#F3F1EC; --surface:#FFFFFF; --surface-2:#ECE9E2; --border:#DDD8CE;
+    --text:#1E2226; --text-muted:#6B6F73; --accent:#C97D1F; --good:#2F8F55; --bad:#C23B2E;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#F3F1EC; --surface:#FFFFFF; --surface-2:#ECE9E2; --border:#DDD8CE;
+  --text:#1E2226; --text-muted:#6B6F73; --accent:#C97D1F; --good:#2F8F55; --bad:#C23B2E;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code","Roboto Mono",Menlo,Consolas,monospace}
+.app{max-width:480px;margin:0 auto;padding:20px 16px 48px}
+header{padding:4px 2px 18px}
+header h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em}
+header p{margin:4px 0 0;color:var(--text-muted);font-size:13px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px}
+.card h2{margin:0 0 12px;font-size:14px;font-weight:600;color:var(--text-muted)}
+
+/* gauge */
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;padding-top:6px}
+.gauge{width:230px;height:118px;border-radius:120px 120px 0 0;position:relative;overflow:hidden}
+.gauge-mask{position:absolute;inset:16px 16px 0 16px;background:var(--surface);border-radius:110px 110px 0 0}
+.gauge-readout{margin-top:-40px;text-align:center;z-index:1}
+.gauge-readout .liters{font-size:38px;font-weight:700}
+.gauge-readout .liters span{font-size:16px;font-weight:500;color:var(--text-muted)}
+.gauge-readout .range{margin-top:2px;color:var(--text-muted);font-size:13px}
+.gauge-sub{display:flex;justify-content:space-between;width:100%;margin-top:16px;font-size:12px;color:var(--text-muted)}
+.gauge-sub b{color:var(--text);font-weight:600}
+
+/* buttons */
+.btn-row{display:flex;gap:10px;margin-bottom:14px}
+button{font:inherit;cursor:pointer}
+.btn{flex:1;padding:13px;border-radius:12px;border:1px solid var(--border);background:var(--surface);
+  color:var(--text);font-weight:600;font-size:14px;transition:transform .08s ease}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#1B1D1F}
+.btn-ghost{background:transparent;color:var(--text-muted);border:none;padding:6px 0;font-size:13px;text-decoration:underline}
+
+/* form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.field label{font-size:12px;color:var(--text-muted)}
+.field input[type=date],.field input[type=number]{
+  background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+  border-radius:10px;padding:10px 11px;font-size:15px;width:100%}
+.field input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.checkline{display:flex;align-items:center;gap:8px;font-size:14px;margin:2px 0 12px}
+.checkline input{width:18px;height:18px}
+.hint{font-size:11.5px;color:var(--text-muted);margin-top:-4px}
+
+/* trip */
+.trip-result{display:flex;justify-content:space-between;align-items:center;margin-top:12px;
+  padding:12px;border-radius:10px;background:var(--surface-2);font-size:14px}
+.badge{padding:5px 10px;border-radius:20px;font-size:12.5px;font-weight:700}
+.badge.good{background:rgba(76,175,109,.18);color:var(--good)}
+.badge.bad{background:rgba(225,88,74,.18);color:var(--bad)}
+
+/* log entries */
+.entry{display:flex;justify-content:space-between;align-items:flex-start;padding:11px 0;
+  border-bottom:1px solid var(--border)}
+.entry:last-child{border-bottom:none}
+.entry .left .date{font-size:13px;font-weight:600}
+.entry .left .meta{font-size:12px;color:var(--text-muted);margin-top:2px}
+.entry .right{text-align:right}
+.entry .right .bal{font-size:14px;font-weight:700}
+.entry .right .sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+.entry .del{background:none;border:none;color:var(--text-muted);font-size:16px;padding:0 0 0 10px}
+.empty-state{color:var(--text-muted);font-size:13px;text-align:center;padding:14px 0}
+
+.disclaimer{font-size:11.5px;color:var(--text-muted);text-align:center;line-height:1.5;margin-top:6px}
+.status-banner{font-size:12px;background:rgba(225,88,74,.15);color:var(--bad);border-radius:10px;
+  padding:9px 12px;margin-bottom:14px;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>⛽ CD 70 Fuel</h1>
+    <p>Running fuel balance for a bike with no gauge.</p>
+  </header>
+
+  <div id="banner"></div>
+
+  <div class="card gauge-wrap">
+    <div class="gauge" id="gauge">
+      <div class="gauge-mask"></div>
+    </div>
+    <div class="gauge-readout">
+      <div class="liters" id="balanceOut">— <span>L left</span></div>
+      <div class="range" id="rangeOut">≈ — km range</div>
+    </div>
+    <div class="gauge-sub">
+      <div>Odometer<br><b class="mono" id="odoOut">—</b></div>
+      <div style="text-align:right">Avg mileage<br><b class="mono" id="mileageOut">—</b></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btnAddFuel">+ Log fuel</button>
+    <button class="btn" id="btnLogRide">+ Log a ride</button>
+  </div>
+
+  <div class="card" id="formCard" style="display:none">
+    <h2 id="formTitle">Log fuel</h2>
+    <div class="field"><label>Date</label><input type="date" id="fDate"></div>
+    <div class="field"><label>Odometer reading (km) — include the tenths digit</label>
+      <input type="number" step="0.1" id="fOdo" placeholder="e.g. 37698.4"></div>
+    <div class="form-grid">
+      <div class="field"><label>Liters added</label><input type="number" step="0.01" id="fLiters" value="0"></div>
+      <div class="field"><label>Price / liter (Rs)</label><input type="number" step="0.01" id="fPrice"></div>
+    </div>
+    <div class="checkline"><input type="checkbox" id="fFull"><label for="fFull">Filled to full tank</label></div>
+    <div class="btn-row" style="margin-bottom:0">
+      <button class="btn btn-ghost" id="btnCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="btn btn-primary" id="btnSave">Save entry</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Trip check</h2>
+    <div class="field" style="margin-bottom:0"><label>Planned distance (km)</label>
+      <input type="number" id="tripDist" step="1"></div>
+    <div class="trip-result">
+      <span id="tripText">— L needed · — L left after</span>
+      <span class="badge" id="tripBadge">—</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Fuel log</h2>
+    <div id="entryList"><div class="empty-state">No entries yet — log your first fill-up above.</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Settings</h2>
+    <div class="form-grid">
+      <div class="field"><label>Tank capacity (L)</label><input type="number" step="0.1" id="sTank"></div>
+      <div class="field"><label>Assumed mileage (km/l)</label><input type="number" step="0.1" id="sMileage"></div>
+    </div>
+    <div class="hint" id="autoHint"></div>
+  </div>
+
+  <p class="disclaimer">Estimates only — based on your assumed mileage, not a direct fuel measurement.
+  Fill to full occasionally to keep the numbers accurate. Data lives in your own Google Sheet.</p>
+</div>
+
+<script>
+// ── Paste your deployed Google Apps Script Web App URL here ──
+const API_URL = https://script.google.com/macros/s/AKfycbwr063M3f7tqQJ4HjVKiHji914eMb4IkPDeeVWq_OKe6ovRJ40GKOWIk-26GegZv_5-/exec;
+// ───────────────────────────────────────────────────────────
+
+const DEFAULTS = { tankCapacity: 8.5, assumedMileage: 60, tripDistance: 20 };
+let entries = [], settings = {...DEFAULTS};
+let mode = "fuel"; // 'fuel' | 'ride'
+let configured = API_URL.indexOf("PASTE_") === -1;
+
+const $ = id => document.getElementById(id);
+const fmt = (n,d=2) => (n===null||n===undefined||isNaN(n)) ? "—" : Number(n).toFixed(d);
+
+function render(){
+  const rows = entries; // already computed by the sheet's own formulas
+  const balance = settings.currentBalance ?? 0;
+  const odo = settings.currentOdometer;
+  const pct = Math.max(0, Math.min(100, settings.tankCapacity>0 ? (balance/settings.tankCapacity)*100 : 0));
+  const color = pct<20 ? "var(--bad)" : (pct<50 ? "var(--accent)" : "var(--good)");
+  $("gauge").style.background = `conic-gradient(from 270deg at 50% 100%, ${color} ${pct}%, var(--surface-2) 0)`;
+  $("balanceOut").innerHTML = `${fmt(balance)} <span>L left</span>`;
+  $("rangeOut").textContent = `≈ ${fmt(settings.rangeLeft,0)} km range`;
+  $("odoOut").textContent = odo!==null && odo!==undefined ? fmt(odo,1) : "—";
+  $("mileageOut").textContent = fmt(settings.assumedMileage,1);
+
+  const mileages = rows.filter(r=>r.mileage!==null).map(r=>r.mileage);
+  const autoAvg = mileages.length ? mileages.reduce((a,b)=>a+b,0)/mileages.length : null;
+  $("autoHint").innerHTML = autoAvg
+    ? `Your logged full-tank average: <b>${fmt(autoAvg,1)} km/l</b> — <span class="btn-ghost" style="cursor:pointer" onclick="applyAutoMileage(${autoAvg})">use this</span>`
+    : "Fill to full at least twice to see your real average mileage here.";
+
+  const list = $("entryList");
+  if(!rows.length){
+    list.innerHTML = `<div class="empty-state">No entries yet — log your first fill-up above.</div>`;
+  } else {
+    list.innerHTML = rows.slice().reverse().map(r=>{
+      const litersLabel = r.fullTank ? `Full tank · ${fmt(r.litersAdded)} L` : (r.litersAdded ? `+${fmt(r.litersAdded)} L` : "Ride check");
+      const sub = r.distance!==null ? `${fmt(r.distance,1)} km · ${fmt(r.fuelUsed)} L used` : "Starting point";
+      return `<div class="entry">
+        <div class="left">
+          <div class="date">${r.date} <span class="mono" style="color:var(--text-muted);font-weight:400">· ${fmt(r.odometer,1)} km</span></div>
+          <div class="meta">${litersLabel}${r.mileage?` · ${fmt(r.mileage,1)} km/l`:""}</div>
+        </div>
+        <div class="right">
+          <div class="bal">${r.balance!==null?fmt(r.balance)+" L":"—"}</div>
+          <div class="sub">${sub}</div>
+        </div>
+        <button class="del" onclick="deleteEntry(${r.row})">×</button>
+      </div>`;
+    }).join("");
+  }
+
+  $("sTank").value = settings.tankCapacity;
+  $("sMileage").value = settings.assumedMileage;
+  if(document.activeElement.id!=="tripDist") $("tripDist").value = settings.tripDistance;
+  renderTrip();
+}
+
+function renderTrip(){
+  const balance = settings.currentBalance ?? 0;
+  const dist = parseFloat($("tripDist").value)||0;
+  const needed = settings.assumedMileage>0 ? dist/settings.assumedMileage : 0;
+  const after = balance - needed;
+  $("tripText").textContent = `${fmt(needed,3)} L needed · ${fmt(after)} L left after`;
+  const badge = $("tripBadge");
+  if(after>=0){ badge.textContent="YES"; badge.className="badge good"; }
+  else { badge.textContent="NO"; badge.className="badge bad"; }
+}
+
+window.applyAutoMileage = (v)=>{ saveSettings({assumedMileage: Math.round(v*10)/10}); };
+window.deleteEntry = (row)=>{
+  postAction({action:"deleteEntry", row}).then(loadData);
+};
+
+// Apps Script web apps don't answer CORS preflight, so POSTs must be
+// "simple requests": text/plain body, no custom headers, mode left as
+// default (not "no-cors") so we can still read the JSON reply.
+function postAction(payload){
+  if(!configured) return Promise.resolve();
+  return fetch(API_URL, {
+    method:"POST",
+    headers:{ "Content-Type":"text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  }).catch(()=>{});
+}
+
+function loadData(){
+  if(!configured) return;
+  fetch(API_URL).then(r=>r.json()).then(data=>{
+    entries = (data.entries||[]).map(e=>({...e}));
+    settings = {...DEFAULTS, ...(data.settings||{})};
+    render();
+  }).catch(()=>{
+    $("banner").innerHTML = `<div class="status-banner">Couldn't reach your Google Sheet API — check the URL and that the sheet is shared.</div>`;
+  });
+}
+
+function saveSettings(patch){
+  settings = {...settings, ...patch};
+  render();
+  postAction({action:"updateSettings", settings:patch}).then(loadData);
+}
+
+function init(){
+  $("fDate").valueAsDate = new Date();
+  if(!configured){
+    $("banner").innerHTML = `<div class="status-banner">Not connected yet — set API_URL near the top of the script to your deployed Apps Script URL.</div>`;
+    render();
+    return;
+  }
+  loadData();
+}
+
+function openForm(m){
+  mode = m;
+  $("formTitle").textContent = m==="fuel" ? "Log fuel" : "Log a ride (no refuel)";
+  $("fLiters").value = m==="fuel" ? "" : "0";
+  $("fPrice").value = "";
+  $("fFull").checked = false;
+  $("fOdo").value = "";
+  $("fDate").valueAsDate = new Date();
+  $("formCard").style.display = "block";
+  $("formCard").scrollIntoView({behavior:"smooth", block:"center"});
+}
+
+$("btnAddFuel").onclick = ()=>openForm("fuel");
+$("btnLogRide").onclick = ()=>openForm("ride");
+$("btnCancel").onclick = ()=>{ $("formCard").style.display="none"; };
+$("btnSave").onclick = ()=>{
+  const odo = parseFloat($("fOdo").value);
+  if(isNaN(odo)){ $("fOdo").focus(); return; }
+  const entry = {
+    date: $("fDate").value || new Date().toISOString().slice(0,10),
+    odometer: odo,
+    litersAdded: parseFloat($("fLiters").value)||0,
+    fullTank: $("fFull").checked,
+    price: parseFloat($("fPrice").value)||null,
+  };
+  $("formCard").style.display="none";
+  $("banner").innerHTML = `<div class="status-banner" style="background:rgba(232,163,61,.15);color:var(--accent)">Saving to your sheet…</div>`;
+  postAction({action:"addEntry", entry}).then(()=>{ $("banner").innerHTML=""; loadData(); });
+};
+$("sTank").onchange = ()=> saveSettings({tankCapacity: parseFloat($("sTank").value)||DEFAULTS.tankCapacity});
+$("sMileage").onchange = ()=> saveSettings({assumedMileage: parseFloat($("sMileage").value)||DEFAULTS.assumedMileage});
+$("tripDist").oninput = ()=>{ renderTrip(); };
+$("tripDist").onchange = ()=> saveSettings({tripDistance: parseFloat($("tripDist").value)||DEFAULTS.tripDistance});
+
+init();
+</script>
+</body>
+</html>
